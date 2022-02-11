@@ -1,0 +1,16 @@
+# OCI CLI configuration
+export OCI_CLI_PROFILE=DEFAULT
+export OCI_CLI_REGION=eu-frankfurt-1
+export OCI_CLI_AUTH=security_token
+export OCI_CLI_TENANCY=
+
+# OCI provider configuration
+export TF_VAR_oci_tenancy=$OCI_CLI_TENANCY
+export TF_VAR_oci_region=$OCI_CLI_REGION
+export TF_VAR_oci_buckets_namespace=
+
+# Server configuration
+export TF_VAR_ssh_knock='[{"port": 1025, "protocol": "udp"}, {"port": 1026, "protocol": "udp"}, {"port": 1027, "protocol": "udp"}]'
+export TF_VAR_minecraft_knock='[{"port": 1028, "protocol": "udp"}, {"port": 1029, "protocol": "udp"}, {"port": 1030, "protocol": "udp"}]'
+
+export TF_VAR_ssh_key=
