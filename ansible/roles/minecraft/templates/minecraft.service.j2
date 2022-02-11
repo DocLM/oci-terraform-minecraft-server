@@ -1,0 +1,13 @@
+[Unit]
+Description=Minecraft server
+After=network.service
+
+[Service]
+Type=simple
+User={{ instance }}
+Group={{ instance }}
+EnvironmentFile=/etc/sysconfig/{{ instance }}
+WorkingDirectory=/opt/{{ instance }}/server
+Restart=on-failure
+
+ExecStart=/opt/{{ instance }}/server/run.sh nogui

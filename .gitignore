@@ -5,3 +5,7 @@
 
 # direnv
 .envrc
+
+# Minecraft
+ansible/roles/minecraft/files/server/**/mods/*.jar
+ansible/roles/minecraft/files/server/**/files/ops.json

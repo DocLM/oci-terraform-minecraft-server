@@ -1,0 +1,23 @@
+- name: Gather os specific variables
+  include_vars:
+    file: "{{ item }}"
+  with_first_found:
+    - '{{ ansible_distribution }}-{{ ansible_distribution_major_version}}.yml'
+    - '{{ ansible_distribution }}.yml'
+    - '{{ ansible_os_family }}.yml'
+    - 'defaults.yml'
+  tags: vars
+
+- name: Add {{ service }} rules to Knock configuration
+  become: yes
+  blockinfile:
+    path: /etc/knockd.conf
+    marker: "# {mark} {{ service }} MANAGED BLOCK #"
+    block: |
+      [openclose{{ service | upper }}]
+        sequence      = {{ ports }}
+        seq_timeout   = 15
+        tcpflags      = syn,ack
+        start_command = /bin/firewall-cmd --zone=public --add-rich-rule="rule family='ipv4' source address='%IP%' service name='{{ service }}' accept"
+        cmd_timeout   = 10
+        stop_command  = /bin/firewall-cmd --zone=public --remove-rich-rule="rule family='ipv4' source address='%IP%' service name='{{ service }}' accept"

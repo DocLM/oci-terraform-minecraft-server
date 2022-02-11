@@ -1,0 +1,3 @@
+#!/bin/sh
+export OCI_CLI_AUTH=instance_principal
+tar -c /var/{{ instance }} | zstd -T0 -10 -f | oci os object put --namespace $1 --bucket-name $2 --name {{ instance }}-$(date "+%Y.%m.%d-%H.%M.%S").tar.zst --force --file -

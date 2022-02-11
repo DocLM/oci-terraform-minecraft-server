@@ -72,7 +72,7 @@ resource "oci_core_instance" "ampere" {
 
   provisioner "local-exec" {
     working_dir = "ansible"
-    command     = "ansible-playbook --inventory '${oci_core_instance.ampere.public_ip},' --ssh-extra-args '-o StrictHostKeyChecking=no' -u ${local.user} minecraft.yml"
+    command     = "ansible-playbook --inventory '${oci_core_instance.ampere.public_ip},' --extra-vars 'skip_updates=true openssh_knock_ports=\"${local.knock_ssh}\" minecraft_knock_ports=\"${local.knock_minecraft}\" minecraft_backup_namespace=\"${oci_objectstorage_bucket.minecraft.namespace}\" minecraft_backup_bucket=\"${oci_objectstorage_bucket.minecraft.name}\"' --ssh-extra-args '-o StrictHostKeyChecking=no' -u ${local.user} minecraft.yml"
   }
 }
 

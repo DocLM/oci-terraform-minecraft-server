@@ -1,0 +1,221 @@
+- name: Create Minecraft user
+  become: yes
+  user:
+    name: "{{ instance }}"
+    system: yes
+    comment: Minecraft server user
+
+- name: Populate service facts
+  become: yes
+  service_facts:
+
+- name: Stop server
+  become: yes
+  systemd:
+    name:  "{{ instance }}"
+    state: stopped
+  when: "instance + '.service' in services"
+
+- name: Delete server directory if exists
+  become: yes
+  file:
+    path:  /opt/{{ instance }}
+    state: absent
+  when: "instance + '.service' in services"
+
+- name: Create server data directory
+  become: yes
+  file:
+    path:  /var/{{ instance }}
+    state: directory
+    mode:  '0750'
+    owner: "{{ instance }}"
+    group: "{{ instance }}"
+
+- name: Create configuration directory
+  become: yes
+  file:
+    path:  /var/{{ instance }}/config
+    state: directory
+    mode:  '0750'
+    owner: "{{ instance }}"
+    group: "{{ instance }}"
+
+- name: Create world directory
+  become: yes
+  file:
+    path:  /var/{{ instance }}/world
+    state: directory
+    mode:  '0750'
+    owner: "{{ instance }}"
+    group: "{{ instance }}"
+
+- name: Create server directory
+  become: yes
+  file:
+    path:  /opt/{{ instance }}/server
+    state: directory
+    mode:  '0750'
+    owner: "{{ instance }}"
+    group: "{{ instance }}"
+
+- name: Create link to writable config directory
+  become: yes
+  file:
+    src: /var/{{ instance }}/config
+    dest: /opt/{{ instance }}/server/config
+    owner: "{{ instance }}"
+    group: "{{ instance }}"
+    state: link
+
+- name: Create link to writable world directory
+  become: yes
+  file:
+    src: /var/{{ instance }}/world
+    dest: /opt/{{ instance }}/server/world
+    owner: "{{ instance }}"
+    group: "{{ instance }}"
+    state: link
+
+- name: Upload server files
+  become: yes
+  copy:
+    src:  server/{{ version }}/files/
+    dest: /opt/{{ instance }}/server/
+    mode: '0640'
+    directory_mode: '0750'
+    owner: root
+    group: "{{ instance }}"
+
+- name: Adjust ops permissions
+  become: yes
+  file:
+    path: /opt/{{ instance }}/server/ops.json
+    owner: root
+    group: "{{ instance }}"
+    mode:  '0660'
+
+- name: Upload server configuration
+  become: yes
+  template:
+    src:   server.properties.j2
+    dest:  /opt/{{ instance }}/server/server.properties
+    owner: root
+    group: "{{ instance }}"
+    mode:  '0660'
+
+- name: Create server libraries directory
+  become: yes
+  file:
+    path:  /opt/{{ instance }}/server/libraries
+    state: directory
+    mode:  '0770'
+    owner: root
+    group: "{{ instance }}"
+
+- include_tasks: 'tasks/minecraft/vanilla.yml'
+  when: not forge_version
+
+- include_tasks: 'tasks/minecraft/mods.yml'
+  when: forge_version
+
+- name: Create server defaultconfigs directory
+  become: yes
+  file:
+    path:  /opt/{{ instance }}/server/defaultconfigs
+    state: directory
+    mode:  '0750'
+    owner: root
+    group: "{{ instance }}"
+
+- name: Create server resourcepacks directory
+  become: yes
+  file:
+    path:  /opt/{{ instance }}/server/resourcepacks
+    state: directory
+    mode:  '0750'
+    owner: root
+    group: "{{ instance }}"
+
+- name: Create server versions directory
+  become: yes
+  file:
+    path:  /opt/{{ instance }}/server/versions
+    state: directory
+    mode:  '0770'
+    owner: root
+    group: "{{ instance }}"
+
+- name: Create server service
+  become: yes
+  template:
+    src:   minecraft.service.j2
+    dest:  /etc/systemd/system/{{ instance }}.service
+    owner: root
+    group: root
+    mode:  '0644'
+
+- name: Create backup configuration
+  become: yes
+  template:
+    src:   minecraft-backup.configuration.j2
+    dest:  /etc/sysconfig/{{ instance }}-backup
+    owner: root
+    group: root
+    mode:  '0640'
+
+- name: Copy backup script
+  become: yes
+  template:
+    src:   backup.sh.j2
+    dest:  /opt/{{ instance }}/backup.sh
+    owner: root
+    group: "{{ instance }}"
+    mode:  '0750'
+
+- name: Create backup service
+  become: yes
+  template:
+    src:   backup.service.j2
+    dest:  /etc/systemd/system/{{ instance }}-backup.service
+    owner: root
+    group: root
+    mode:  '0644'
+
+- name: Create backup timer
+  become: yes
+  copy:
+    src:   services/minecraft/backup.timer
+    dest:  /etc/systemd/system/{{ instance }}-backup.timer
+    owner: root
+    group: root
+    mode:  '0644'
+
+- name: Create startup configuration
+  become: yes
+  template:
+    src:   minecraft.configuration.j2
+    dest:  /etc/sysconfig/{{ instance }}
+    owner: root
+    group: root
+    mode:  '0640'
+
+- name: Enable at startup
+  become: yes
+  systemd:
+    name: "{{ instance }}"
+    enabled: yes
+    daemon_reload: yes
+
+- name: Create firewall definitions
+  become: yes
+  template:
+    src:   minecraft.xml.j2
+    dest:  /etc/firewalld/services/{{ instance }}.xml
+    owner: root
+    group: root
+    mode:  '0644'
+
+- name: Reload FirewallD
+  become: yes
+  command: firewall-cmd --reload

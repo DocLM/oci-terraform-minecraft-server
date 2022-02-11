@@ -1,0 +1,11 @@
+[Unit]
+Description=Minecraft server backup
+After=network.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/sysconfig/{{ instance }}-backup
+WorkingDirectory=/opt/{{ instance }}
+ExecStartPre=/usr/bin/systemctl stop {{ instance }}
+ExecStart=/opt/{{ instance }}/backup.sh "$NAMESPACE" "$BUCKET"
+ExecStopPost=/usr/bin/systemctl start {{ instance }}

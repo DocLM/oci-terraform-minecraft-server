@@ -17,3 +17,37 @@
   roles:
     - auto-updates
     - ksplice
+    - role: knockd
+      vars:
+        interface: "enp0s3"
+    - role: knockd-firewalld
+      vars:
+        ports: "{{ openssh_knock_ports }}"
+        service: "ssh"
+    - role: minecraft
+      vars:
+        version: "1.18.1"
+        forge_version: null
+        instance: "minecraft"
+        port: 25565
+        seed: "410720613558457687"
+        backup_namespace: "{{ minecraft_backup_namespace }}"
+        backup_bucket: "{{ minecraft_backup_bucket }}"
+    - role: knockd-firewalld
+      vars:
+        ports: "{{ minecraft_knock_ports }}"
+        service: "minecraft"
+    - role: minecraft
+      vars:
+        version: "1.18.1"
+        forge_version: "39.0.75"
+        instance: "minecraft-mods"
+        port: 25566
+        seed: "460628901"
+        backup_namespace: "{{ minecraft_backup_namespace }}"
+        backup_bucket: "{{ minecraft_backup_bucket }}"
+        java_opts: "-Xmx8G"
+    - role: knockd-firewalld
+      vars:
+        ports: "{{ minecraft_knock_ports }}"
+        service: "minecraft-mods"

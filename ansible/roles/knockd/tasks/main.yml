@@ -1,0 +1,36 @@
+- name: Gather os specific variables
+  include_vars:
+    file: "{{ item }}"
+  with_first_found:
+    - '{{ ansible_distribution }}-{{ ansible_distribution_major_version}}.yml'
+    - '{{ ansible_distribution }}.yml'
+    - '{{ ansible_os_family }}.yml'
+    - 'defaults.yml'
+  tags: vars
+
+- name: Install official EPEL repository
+  become: yes
+  dnf:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    state: present
+
+- name: Install Knock server
+  become: yes
+  package:
+    name: knock-server
+    state: present
+
+- name: Create Knockd default configuration
+  become: yes
+  template:
+    src:   knockd.conf.j2
+    dest:  /etc/knockd.conf
+    owner: root
+    group: root
+    mode:  '0640'
+
+- name: Enable Knockd
+  become: yes
+  systemd:
+    name: knockd
+    enabled: yes

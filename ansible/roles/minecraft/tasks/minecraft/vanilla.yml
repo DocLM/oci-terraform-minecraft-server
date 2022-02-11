@@ -1,0 +1,41 @@
+- name: Retrieve launchers metadata from Mojang
+  uri:
+    url: https://launchermeta.mojang.com/mc/game/version_manifest.json
+    method: GET
+    return_content: yes
+  register: metadata
+
+- name: Retrieve Minecraft {{ version }} download url
+  uri:
+    url: "{{ item.url }}"
+    method: GET
+    return_content: yes
+  register: version_metadata
+  loop: "{{ metadata.json | community.general.json_query(version_query) }}"
+  vars:
+    version_query: "versions[?id=='{{ version }}']"
+
+- name: Download {{ version }} server
+  become: yes
+  ansible.builtin.get_url:
+    url: "{{ version_metadata.results[0].json.downloads.server.url }}"
+    dest: /opt/{{ instance }}/server
+    mode: '0640'
+    owner: root
+    group: "{{ instance }}"
+
+- name: Check if exists a server startup script
+  become: yes
+  ansible.builtin.stat:
+    path: /opt/{{ instance }}/server/run.sh
+  register: run_script
+
+- name: Copy startup script
+  become: yes
+  copy:
+    src:   server/run.sh
+    dest:  /opt/{{ instance }}/server/run.sh
+    owner: root
+    group: "{{ instance }}"
+    mode:  '0750'
+  when: not run_script.stat.exists

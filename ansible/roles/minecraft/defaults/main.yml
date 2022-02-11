@@ -1,0 +1,8 @@
+backup_namespace: ""
+backup_bucket: ""
+instance: "minecraft"
+version: "1.18"
+forge_version: null
+port: 25565
+java_opts: "-Xmx4G"
+seed: ""

@@ -1,0 +1,35 @@
+- name: Gather os specific variables
+  include_vars:
+    file: "{{ item }}"
+  with_first_found:
+    - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'
+    - '{{ ansible_distribution }}.yml'
+    - '{{ ansible_os_family }}.yml'
+    - 'defaults.yml'
+  tags: vars
+
+- name: Install OpenJDK 17
+  become: yes
+  package:
+    name: java-17-openjdk-headless
+    state: present
+
+- name: Install OCI CLI
+  become: yes
+  package:
+    name: python36-oci-cli
+    state: present
+
+- name: Install Zstandard
+  become: yes
+  package:
+    name: zstd
+    state: present
+
+- name: Install official EPEL repository
+  become: yes
+  dnf:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    state: present
+
+- include: minecraft.yml

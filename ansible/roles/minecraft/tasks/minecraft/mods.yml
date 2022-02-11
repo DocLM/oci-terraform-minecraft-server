@@ -1,0 +1,50 @@
+- name: Upload Minecraft server mods
+  become: yes
+  copy:
+    src:  server/{{ version }}/mods
+    dest: /opt/{{ instance }}/server
+    mode: '0640'
+    directory_mode: '0750'
+    owner: root
+    group: "{{ instance }}"
+
+- name: Download Minecraft server installer
+  become: yes
+  ansible.builtin.get_url:
+    url: https://maven.minecraftforge.net/net/minecraftforge/forge/{{ version }}-{{ forge_version }}/forge-{{ version }}-{{ forge_version }}-installer.jar
+    dest: /opt/{{ instance }}/server
+    mode: '0640'
+    owner: root
+    group: "{{ instance }}"
+
+- name: Install modded server
+  become: yes
+  ansible.builtin.command: java -jar forge-{{ version }}-{{ forge_version }}-installer.jar --installServer
+  args:
+    chdir: /opt/{{ instance }}/server/
+
+- name: Delete installer junk
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /opt/{{ instance }}/server/forge-{{ version }}-{{ forge_version }}-installer.jar
+    - /opt/{{ instance }}/server/forge-{{ version }}-{{ forge_version }}-installer.jar.log
+    - /opt/{{ instance }}/server/run.bat
+    - /opt/{{ instance }}/server/user_jvm_args.txt
+
+- name: Edit startup command with service variables
+  become: yes
+  ansible.builtin.replace:
+    path: /opt/{{ instance }}/server/run.sh
+    regexp: 'java @user_jvm_args.txt'
+    replace: '/usr/bin/java $JAVA_OPTS -Dlog4j2.formatMsgNoLookups=true -Dlog4j.configurationFile=log4j2.xml'
+
+- name: Adjust server start script permissions
+  become: yes
+  file:
+    path: /opt/{{ instance }}/server/run.sh
+    owner: root
+    group: "{{ instance }}"
+    mode:  '0750'
