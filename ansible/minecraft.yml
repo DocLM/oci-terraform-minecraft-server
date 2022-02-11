@@ -1,0 +1,19 @@
+- hosts: all
+  pre_tasks:
+    - name: Include default variables
+      include_vars:
+        file: defaults.yml
+    - name: Update system
+      become: yes
+      package:
+        name: '*'
+        state: latest
+      when: not (skip_updates|bool)
+    - name: Reboot
+      become: yes
+      reboot:
+      when: not (skip_updates|bool)
+
+  roles:
+    - auto-updates
+    - ksplice

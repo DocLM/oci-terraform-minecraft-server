@@ -69,6 +69,11 @@ resource "oci_core_instance" "ampere" {
       user = local.user
     }
   }
+
+  provisioner "local-exec" {
+    working_dir = "ansible"
+    command     = "ansible-playbook --inventory '${oci_core_instance.ampere.public_ip},' --ssh-extra-args '-o StrictHostKeyChecking=no' -u ${local.user} minecraft.yml"
+  }
 }
 
 resource "oci_identity_dynamic_group" "root" {

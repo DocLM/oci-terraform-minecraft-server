@@ -1,0 +1,17 @@
+- name: Gather os specific variables
+  include_vars:
+    file: "{{ item }}"
+  with_first_found:
+    - '{{ ansible_distribution }}-{{ ansible_distribution_major_version}}.yml'
+    - '{{ ansible_distribution }}.yml'
+    - '{{ ansible_os_family }}.yml'
+    - 'defaults.yml'
+  tags: vars
+
+- name: Set Ksplice automatic update flag
+  become: yes
+  lineinfile:
+    dest: /etc/uptrack/uptrack.conf
+    create: yes
+    regexp: '^autoinstall =' 
+    line: 'autoinstall = yes'

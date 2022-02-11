@@ -1,0 +1,37 @@
+- name: Gather os specific variables
+  include_vars:
+    file: "{{ item }}"
+  with_first_found:
+    - '{{ ansible_distribution }}-{{ ansible_distribution_major_version}}.yml'
+    - '{{ ansible_distribution }}.yml'
+    - '{{ ansible_os_family }}.yml'
+    - 'defaults.yml'
+  tags: vars
+
+- name: Install DNF Automatic
+  become: yes
+  package:
+    name: dnf-automatic
+    state: present
+
+- name: Set DNF Automatic updates download
+  become: yes
+  lineinfile:
+    dest: /etc/dnf/automatic.conf
+    regexp: '^download_updates =' 
+    line: 'download_updates = yes'
+    create: yes
+
+- name: Set DNF Automatic updates apply
+  become: yes
+  lineinfile:
+    dest: /etc/dnf/automatic.conf
+    regexp: '^apply_updates ='
+    line: 'apply_updates = yes'
+    create: yes
+
+- name: Enable DNF Automatic
+  become: yes
+  systemd:
+    name: dnf-automatic.timer
+    enabled: yes
